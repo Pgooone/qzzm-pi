@@ -6,7 +6,7 @@ import { ToolCard } from "./ToolCard"
 import { ThinkingCard } from "./ThinkingCard"
 import { useEffect, useRef } from "react"
 
-export function MessageList({ messages }: { messages: Msg[] }) {
+export function MessageList({ messages, onRetry }: { messages: Msg[]; onRetry?: (msgId?: string) => void }) {
   const endRef = useRef<HTMLDivElement>(null)
   useEffect(() => endRef.current?.scrollIntoView({ behavior: "smooth" }), [messages])
 
@@ -69,8 +69,14 @@ export function MessageList({ messages }: { messages: Msg[] }) {
             return (
               <div key={m.id} className="flex gap-4">
                 <div className="w-8 flex-shrink-0" />
-                <div className="flex-1 flex items-center gap-2 bg-red-50 border border-red-200 text-red-700 rounded-lg px-3 py-2 text-sm">
-                  <AlertCircle className="w-4 h-4" /> {m.text}
+                <div className="flex-1 bg-red-50 border border-red-200 text-red-700 rounded-lg px-3 py-2 text-sm">
+                  <div className="flex items-center gap-2">
+                    <AlertCircle className="w-4 h-4" /> {m.text}
+                  </div>
+                  <div className="flex gap-2 mt-1">
+                    <button onClick={() => onRetry?.(m.id)} className="text-xs text-blue-600 hover:underline">重试</button>
+                    <button onClick={() => onRetry?.(m.id)} className="text-xs text-blue-600 hover:underline">换 V4 Flash 重试</button>
+                  </div>
                 </div>
               </div>
             )

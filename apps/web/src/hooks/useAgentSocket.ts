@@ -22,6 +22,13 @@ export function useAgentSocket(projectId: string) {
   const [oldestHistoryId, setOldestHistoryId] = useState<string | undefined>()
   const [streaming, setStreaming] = useState(false)
   const [connected, setConnected] = useState(false)
+  const [currentModel, setCurrentModel] = useState<{ id: string; name: string }>({ id: "", name: "" })
+  const [thinkingLevel, setThinkingLevel] = useState("off")
+  const [compacting, setCompacting] = useState(false)
+  const [compactionSummary, setCompactionSummary] = useState<string | undefined>()
+  const [autoRetrying, setAutoRetrying] = useState(false)
+  const [retryReason, setRetryReason] = useState("")
+  const [lastUserText, setLastUserText] = useState("")
   const wsRef = useRef<WebSocket | null>(null)
   const reconnectRef = useRef(0)
 
@@ -40,6 +47,8 @@ export function useAgentSocket(projectId: string) {
       switch (m.kind) {
         case "hello":
           setRole(m.role)
+          if (m.model?.id) setCurrentModel(m.model)
+          setThinkingLevel(m.thinkingLevel ?? "off")
           break
         case "artifact_snapshot":
           setArtifacts(m.artifacts)
@@ -58,6 +67,25 @@ export function useAgentSocket(projectId: string) {
           break
         case "session_cleared":
           setMessages([])
+          break
+        case "model_changed":
+          if (m.model?.id) setCurrentModel(m.model)
+          setThinkingLevel(m.thinkingLevel)
+          break
+        case "compaction_start":
+          setCompacting(true)
+          setCompactionSummary(undefined)
+          break
+        case "compaction_end":
+          setCompacting(false)
+          setCompactionSummary(m.summary)
+          break
+        case "auto_retry_start":
+          setAutoRetrying(true)
+          setRetryReason(m.reason)
+          break
+        case "auto_retry_end":
+          setAutoRetrying(false)
           break
         case "message_start":
           setMessages((prev) => [...prev, { id: m.messageId, role: m.role, text: "", toolCalls: [], ts: Date.now() }])
@@ -113,13 +141,26 @@ export function useAgentSocket(projectId: string) {
     if (wsRef.current?.readyState === 1) wsRef.current.send(JSON.stringify(msg))
   }, [])
 
+  const prompt = useCallback((text: string) => {
+    setLastUserText(text)
+    send({ kind: "prompt", text, behavior: "steer" })
+  }, [send])
+
+  const retryMessage = useCallback((messageId?: string) => {
+    if (lastUserText) send({ kind: "prompt", text: lastUserText, behavior: "steer" })
+    else send({ kind: "retry", messageId })
+  }, [send, lastUserText])
+
   return {
     role, messages, artifacts, tree, currentNodeId, streaming, connected,
     hasMoreHistory, oldestHistoryId,
-    prompt: (text: string) => send({ kind: "prompt", text, behavior: "steer" }),
+    currentModel, thinkingLevel, compacting, compactionSummary, autoRetrying, retryReason,
+    prompt, retryMessage,
     abort: () => send({ kind: "abort" }),
     compact: (instructions?: string) => send({ kind: "compact", instructions }),
     switchRole: (r: RoleId) => send({ kind: "switch_role", role: r }),
+    switchModel: (provider: string, modelId: string) => send({ kind: "switch_model", provider, modelId }),
+    setThinking: (level: "off" | "low" | "medium" | "high" | "xhigh") => send({ kind: "set_thinking", level }),
     fork: (messageId: string) => send({ kind: "fork", messageId }),
     navigate: (nodeId: string) => send({ kind: "navigate", nodeId }),
     loadMoreHistory: () => oldestHistoryId && send({ kind: "load_history", before: oldestHistoryId, limit: 50 }),

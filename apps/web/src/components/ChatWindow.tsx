@@ -4,12 +4,23 @@ import { SessionSidebar } from "./SessionSidebar"
 import { MessageList } from "./MessageList"
 import { InputBox } from "./InputBox"
 import { ArtifactPanel } from "./ArtifactPanel"
+import { ModelChip } from "./ModelChip"
+import { ThinkingSlider } from "./ThinkingSlider"
+import { CompactCard, AutoRetryCard } from "./CompactCard"
 
 export function ChatWindow({ projectId }: { projectId: string }) {
   const sock = useAgentSocket(projectId)
   return (
     <div className="flex flex-col h-full">
       <AgentTabs role={sock.role} onChange={sock.switchRole} />
+      <div className="flex items-center gap-2 px-3 h-8 border-b bg-gray-50">
+        <ModelChip current={sock.currentModel.id ? sock.currentModel : undefined} onChange={sock.switchModel} />
+        <ThinkingSlider value={sock.thinkingLevel} onChange={sock.setThinking} disabled={false} />
+        <div className="ml-auto text-xs text-gray-400">{sock.connected ? "已连接" : "重连中…"}</div>
+      </div>
+      {sock.autoRetrying && <AutoRetryCard reason={sock.retryReason} success={false} />}
+      {sock.compacting && <CompactCard status="running" />}
+      {sock.compactionSummary && <CompactCard status="done" summary={sock.compactionSummary} />}
       <div className="flex flex-1 min-h-0">
         <SessionSidebar
           tree={sock.tree}
@@ -20,8 +31,8 @@ export function ChatWindow({ projectId }: { projectId: string }) {
           onFork={sock.fork}
         />
         <div className="flex-1 flex flex-col min-w-0">
-          <MessageList messages={sock.messages} />
-          <InputBox streaming={sock.streaming} onSend={sock.prompt} onAbort={sock.abort} />
+          <MessageList messages={sock.messages} onRetry={sock.retryMessage} />
+          <InputBox streaming={sock.streaming} onSend={sock.prompt} onAbort={sock.abort} onCompact={() => sock.compact()} />
         </div>
         <ArtifactPanel projectId={projectId} artifacts={sock.artifacts} />
       </div>
