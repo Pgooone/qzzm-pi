@@ -1,4 +1,25 @@
+# 依赖 / 构建
 node_modules/
 dist/
+build/
+.next/
+.turbo/
+.cache/
+*.tsbuildinfo
+
+# 运行时状态与隐私
+state/
 .env
-.claude/settings.local.json
+.env.local
+.env.*.local
+*.log
+logs/
+
+# 编辑器 / 系统
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# pnpm
+.pnpm-store/
