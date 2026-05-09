@@ -4,11 +4,11 @@ import { nanoid } from "nanoid"
 import type { AgentSession } from "@earendil-works/pi-coding-agent"
 import { createRoleSession } from "./pi/createSession.js"
 import { artifactBus } from "./store/artifactStore.js"
-import type { AgentRole } from "./pi/prompts.js"
+import type { RoleId } from "./pi/modelConfig.js"
 import { log } from "./lib/log.js"
 
 type OutMsg =
-  | { kind: "hello"; projectId: string; role: AgentRole }
+  | { kind: "hello"; projectId: string; role: RoleId; model: { id: string; name: string }; thinkingLevel: string }
   | { kind: "text_delta"; messageId: string; delta: string }
   | { kind: "thinking_delta"; messageId: string; delta: string }
   | { kind: "message_start"; messageId: string }
@@ -25,12 +25,12 @@ type InMsg =
   | { kind: "prompt"; text: string; behavior?: "steer" | "followUp" }
   | { kind: "abort" }
   | { kind: "compact"; instructions?: string }
-  | { kind: "switch_role"; role: AgentRole }
+  | { kind: "switch_role"; role: RoleId }
 
 export async function registerWsRoutes(app: FastifyInstance) {
   app.get("/ws/:projectId", { websocket: true }, async (socket: WebSocket, req) => {
     const projectId = (req.params as { projectId: string }).projectId || nanoid(10)
-    let role: AgentRole = "prd"
+    let role: RoleId = "prd"
     let session: AgentSession | undefined
     let unsubAgent: (() => void) | null = null
 
@@ -40,10 +40,25 @@ export async function registerWsRoutes(app: FastifyInstance) {
       }
     }
 
-    const attachSession = async (newRole: AgentRole) => {
-      unsubAgent?.()
+    const attachSession = async (newRole: RoleId) => {
+      // 修补 §2.1：切角色 / 重连时 dispose 旧 session，避免 jsonl 文件锁和 subscribe 队列泄漏
+      try { unsubAgent?.() } catch { /* ignore */ }
+      try { session?.dispose() } catch { /* ignore */ }
+      unsubAgent = null
+      session = undefined
+
       role = newRole
-      session = await createRoleSession(role, projectId)
+      const created = await createRoleSession(projectId, role)
+      session = created.session
+
+      send({
+        kind: "hello",
+        projectId,
+        role,
+        model: { id: (created.model as any).id, name: (created.model as any).name },
+        thinkingLevel: created.thinkingLevel,
+      })
+
       unsubAgent = session.subscribe((event) => {
         switch (event.type) {
           case "message_start":
@@ -80,7 +95,6 @@ export async function registerWsRoutes(app: FastifyInstance) {
             break
         }
       })
-      send({ kind: "hello", projectId, role })
     }
 
     try {
@@ -134,7 +148,7 @@ export async function registerWsRoutes(app: FastifyInstance) {
     socket.on("close", () => {
       unsubAgent?.()
       artifactBus.off("updated", onArtifact)
-      session?.dispose()
+      try { session?.dispose() } catch { /* ignore */ }
       log.info(`ws closed project=${projectId}`)
     })
   })
