@@ -63,12 +63,21 @@ export function ArtifactPanel({ projectId, artifacts }: { projectId: string; art
           </div>
         )}
         {active && k === "html" && (
-          <iframe
-            title={active}
-            srcDoc={content}
-            className="w-full h-full border-0"
-            sandbox="allow-scripts allow-same-origin"
-          />
+          <div className="flex flex-col h-full">
+            <iframe
+              title={active}
+              srcDoc={content}
+              className="flex-1 w-full border-0"
+              sandbox="allow-scripts allow-same-origin"
+            />
+            <div className="px-3 py-1.5 border-t border-gray-100 bg-gray-50">
+              <a target="_blank" rel="noopener noreferrer"
+                href={`/artifacts/${projectId}/${encodeURIComponent(active)}`}
+                className="text-xs text-blue-600 hover:underline">
+                在新窗口打开
+              </a>
+            </div>
+          </div>
         )}
         {active && (k === "yaml" || k === "sql" || k === "text") && (
           <pre className="p-6 text-xs whitespace-pre-wrap font-mono">{content}</pre>
