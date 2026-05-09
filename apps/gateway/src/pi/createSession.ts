@@ -7,18 +7,9 @@ import { mkdir } from "node:fs/promises"
 import { join } from "node:path"
 import { buildAuthAndRegistry, pickDefaultModel, pickThinkingLevel, type RoleId } from "./modelConfig.js"
 import { SYSTEM_PROMPTS } from "./prompts.js"
-import { buildPrdTools } from "./tools.js"
+import { toolsForRole } from "./tools.js"
 
 const STATE_DIR = process.env.STATE_DIR ?? "./state"
-
-function toolsForRole(role: RoleId, projectId: string) {
-  switch (role) {
-    case "prd":
-      return buildPrdTools(projectId)
-    default:
-      return []
-  }
-}
 
 export async function createRoleSession(projectId: string, role: RoleId) {
   const { authStorage, registry } = buildAuthAndRegistry()
