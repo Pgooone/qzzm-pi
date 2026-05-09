@@ -82,3 +82,6 @@ export class ProjectStore {
     await rm(this.dirOf(id), { recursive: true, force: true })
   }
 }
+
+const STATE_DIR = process.env.STATE_DIR ?? "./state"
+export const projectStore = new ProjectStore(join(STATE_DIR, "projects"))
