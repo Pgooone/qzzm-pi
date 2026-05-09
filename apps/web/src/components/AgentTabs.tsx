@@ -5,7 +5,7 @@ const tabs: Array<{ key: AgentRole; label: string; emoji: string; enabled: boole
   { key: "prd", label: "需求", emoji: "📝", enabled: true },
   { key: "design", label: "设计", emoji: "📐", enabled: true },
   { key: "dev", label: "开发", emoji: "💻", enabled: true },
-  { key: "review", label: "审查", emoji: "🔍", enabled: false },
+  { key: "review", label: "审查", emoji: "🔍", enabled: true },
 ]
 
 export function AgentTabs({ role, onChange }: { role: AgentRole; onChange: (r: AgentRole) => void }) {

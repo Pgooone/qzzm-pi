@@ -2,6 +2,7 @@ import type { RoleId } from "./modelConfig.js"
 import { buildPrdTools } from "./tools/prdTools.js"
 import { buildDesignTools } from "./tools/designTools.js"
 import { buildDevTools } from "./tools/devTools.js"
+import { buildReviewTools } from "./tools/reviewTools.js"
 
 export function toolsForRole(role: RoleId, projectId: string) {
   switch (role) {
@@ -11,6 +12,8 @@ export function toolsForRole(role: RoleId, projectId: string) {
       return buildDesignTools(projectId)
     case "dev":
       return buildDevTools(projectId)
+    case "review":
+      return buildReviewTools(projectId)
     default:
       return []
   }
