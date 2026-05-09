@@ -52,7 +52,9 @@ export const artifactStore = {
     const dir = projectDir(projectId)
     try {
       const files = await readdir(dir)
-      return files.filter((f) => !f.includes(".v") && !/\.final$/.test(f))
+      // 精确匹配版本后缀，避免误杀如 db.view.sql 这类名字
+      const versionSuffix = /\.(v\d+|final)$/
+      return files.filter((f) => !versionSuffix.test(f) && !f.startsWith("."))
     } catch {
       return []
     }
