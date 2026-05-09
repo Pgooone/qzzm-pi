@@ -27,6 +27,7 @@ const { projectStore } = await import("./store/projectStore.js")
 const { registerWsRoutes } = await import("./ws.js")
 const { registerArtifactRoutes } = await import("./artifacts.js")
 const projectsRoutes = await import("./routes/projects.js")
+const exportRoutes = await import("./routes/export.js")
 
 const { default: Fastify } = await import("fastify")
 const { default: cors } = await import("@fastify/cors")
@@ -40,6 +41,7 @@ await app.register(cors, { origin: true })
 await app.register(websocket)
 
 await app.register(projectsRoutes.default, { store: projectStore })
+await app.register(exportRoutes.default)
 await registerWsRoutes(app)
 await registerArtifactRoutes(app)
 
