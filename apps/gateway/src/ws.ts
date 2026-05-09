@@ -138,8 +138,8 @@ export async function registerWsRoutes(app: FastifyInstance) {
       return
     }
 
-    const onArtifact = (rec: { projectId: string; name: string; version: string; size: number; kind: string }) => {
-      if (rec.projectId !== projectId) return
+    const onArtifact = (rec: { projectId?: string; name: string; version: string; size?: number }) => {
+      if ((rec as any).projectId !== projectId) return
       send({ kind: "artifact_updated", artifact: rec })
     }
     artifactBus.on("updated", onArtifact)
