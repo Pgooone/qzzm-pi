@@ -8,6 +8,7 @@ export default defineConfig({
     proxy: {
       "/ws": { target: "http://localhost:8787", ws: true },
       "/artifacts": { target: "http://localhost:8787", changeOrigin: true },
+      "/projects": { target: "http://localhost:8787", changeOrigin: true },
     },
   },
 })
