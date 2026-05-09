@@ -1,0 +1,1 @@
+<template><div><nav style="padding:1rem;background:#1e40af;color:#fff;display:flex;gap:1rem"><router-link to="/" style="color:#fff;text-decoration:none">首页</router-link><router-link to="/about" style="color:#fff;text-decoration:none">关于</router-link></nav><main style="max-width:960px;margin:2rem auto;padding:0 1rem"><router-view /></main></div></template>

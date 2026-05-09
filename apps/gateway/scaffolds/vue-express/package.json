@@ -1,0 +1,6 @@
+{
+  "name": "__PROJECT_NAME__",
+  "private": true,
+  "scripts": { "dev": "concurrently \"pnpm -C apps/web dev\" \"pnpm -C apps/api dev\"", "build": "pnpm -C apps/web build && pnpm -C apps/api build" },
+  "devDependencies": { "concurrently": "^8.2.2", "typescript": "^5.5.0" }
+}
