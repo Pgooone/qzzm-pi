@@ -10,8 +10,7 @@ const tabs: Array<{ key: AgentRole; label: string; emoji: string; enabled: boole
 
 export function AgentTabs({ role, onChange }: { role: AgentRole; onChange: (r: AgentRole) => void }) {
   return (
-    <div className="flex items-center gap-1 px-3 h-12 border-b bg-white">
-      <div className="text-base font-semibold mr-4">🛠️ 全栈智码</div>
+    <div className="flex items-center gap-1 px-3 h-10 border-b bg-white">
       {tabs.map((t) => (
         <button
           key={t.key}
