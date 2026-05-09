@@ -5,6 +5,10 @@
   "scripts": {
     "dev": "pnpm -r --parallel dev",
     "build": "pnpm -r build",
-    "clean": "rm -rf state node_modules apps/*/node_modules apps/*/dist"
+    "clean": "rm -rf state node_modules apps/*/node_modules apps/*/dist",
+    "verify-cheatsheet": "tsx scripts/verify-cheatsheet.ts"
+  },
+  "devDependencies": {
+    "tsx": "^4.16.2"
   }
 }
