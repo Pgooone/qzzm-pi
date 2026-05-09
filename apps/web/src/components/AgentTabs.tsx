@@ -26,7 +26,6 @@ export function AgentTabs({ role, onChange }: { role: AgentRole; onChange: (r: A
           {!t.enabled && <span className="ml-1 text-[10px] opacity-70">即将上线</span>}
         </button>
       ))}
-      <div className="ml-auto text-xs text-gray-500">Provider: DeepSeek</div>
     </div>
   )
 }

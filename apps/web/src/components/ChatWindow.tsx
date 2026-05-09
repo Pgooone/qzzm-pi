@@ -13,10 +13,14 @@ export function ChatWindow({ projectId }: { projectId: string }) {
   return (
     <div className="flex flex-col h-full">
       <AgentTabs role={sock.role} onChange={sock.switchRole} />
-      <div className="flex items-center gap-2 px-3 h-8 border-b bg-gray-50">
+      <div className="flex items-center gap-3 px-3 py-1 border-b bg-gray-50/80">
         <ModelChip current={sock.currentModel.id ? sock.currentModel : undefined} onChange={sock.switchModel} />
+        <span className="text-gray-300">|</span>
         <ThinkingSlider value={sock.thinkingLevel} onChange={sock.setThinking} disabled={false} />
-        <div className="ml-auto text-xs text-gray-400">{sock.connected ? "已连接" : "重连中…"}</div>
+        <div className="ml-auto flex items-center gap-1.5">
+          <span className={`w-1.5 h-1.5 rounded-full ${sock.connected ? "bg-green-500" : "bg-red-400"}`} />
+          <span className="text-xs text-gray-400">{sock.connected ? "已连接" : "重连中…"}</span>
+        </div>
       </div>
       {sock.autoRetrying && <AutoRetryCard reason={sock.retryReason} success={false} />}
       {sock.compacting && <CompactCard status="running" />}
