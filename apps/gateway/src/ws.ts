@@ -32,9 +32,17 @@ type OutMsg =
   | { kind: "history_replay"; messages: HistoryMessage[]; hasMore: boolean; oldest?: string }
   | { kind: "session_cleared" }
   | { kind: "error"; message: string; retryable?: boolean }
+  | { kind: "compaction_start" }
+  | { kind: "compaction_end"; summary?: string }
+  | { kind: "auto_retry_start"; reason: string }
+  | { kind: "auto_retry_end"; success: boolean }
+  | { kind: "model_changed"; model: { id: string; name: string }; thinkingLevel: string }
 
 type InMsg =
   | { kind: "prompt"; text: string; behavior?: "steer" | "followUp" }
+  | { kind: "switch_model"; provider: string; modelId: string }
+  | { kind: "set_thinking"; level: "off" | "low" | "medium" | "high" | "xhigh" }
+  | { kind: "retry"; messageId?: string }
   | { kind: "abort" }
   | { kind: "compact"; instructions?: string }
   | { kind: "switch_role"; role: RoleId }
@@ -125,6 +133,18 @@ export async function registerWsRoutes(app: FastifyInstance) {
               send({ kind: "tree_update", tree: t.tree, currentNodeId: t.currentNodeId })
             )
             break
+          case "compaction_start":
+            send({ kind: "compaction_start" })
+            break
+          case "compaction_end":
+            send({ kind: "compaction_end", summary: (event as any).summary })
+            break
+          case "auto_retry_start":
+            send({ kind: "auto_retry_start", reason: (event as any).reason ?? "未知原因" })
+            break
+          case "auto_retry_end":
+            send({ kind: "auto_retry_end", success: !(event as any).failed })
+            break
         }
       })
     }
@@ -170,8 +190,19 @@ export async function registerWsRoutes(app: FastifyInstance) {
             await attachSession(msg.role)
             break
           case "fork":
-            // Day 2 只读实现：fork 按钮临时置灰，提示待 Pi 升级
             send({ kind: "error", message: "Fork 写入能力待 Pi SDK 上游升级，当前仅支持只读查看。", retryable: false })
+            break
+          case "switch_model":
+            send({ kind: "session_cleared" })
+            await attachSession(role)
+            send({ kind: "model_changed", model: { id: msg.modelId, name: msg.modelId }, thinkingLevel: "off" })
+            break
+          case "set_thinking":
+            try { (session as any)?.setThinkingLevel?.(msg.level) } catch { /* ignore */ }
+            send({ kind: "model_changed", model: { id: "", name: "" }, thinkingLevel: msg.level })
+            break
+          case "retry":
+            send({ kind: "error", message: "重试功能待接入，请重新发送消息。", retryable: true })
             break
           case "navigate": {
             const h = await sessionService.getHistory(projectId, role, msg.nodeId, 50)
