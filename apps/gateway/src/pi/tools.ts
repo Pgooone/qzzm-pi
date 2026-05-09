@@ -16,12 +16,12 @@ export function buildPrdTools(projectId: string) {
       let v = version.trim()
       v = v.replace(/^[vV]+/, "")
       v = v ? `v${v}` : "v1"
-      const rec = await artifactStore.save(projectId, "prd.md", content, v, "prd")
+      const rec = await artifactStore.save(projectId, "prd.md", v, content)
       return {
         content: [
-          { type: "text", text: `已写入 prd.md（${v}，${rec.size} 字节）。用户可在右侧面板预览或导出。` },
+          { type: "text", text: `已写入 prd.md（${v}，${rec.size ?? 0} 字节）。用户可在右侧面板预览或导出。` },
         ],
-        details: { path: rec.path, version: v, size: rec.size },
+        details: { version: v, size: rec.size },
       }
     },
   })
@@ -33,8 +33,8 @@ export function buildPrdTools(projectId: string) {
     parameters: Type.Object({}, { additionalProperties: false }),
     execute: async () => {
       try {
-        const { content, size } = await artifactStore.load(projectId, "prd.md")
-        return { content: [{ type: "text", text: content }], details: { size } }
+        const content = await artifactStore.load(projectId, "prd.md")
+        return { content: [{ type: "text", text: content }], details: { size: content.length } }
       } catch {
         return { content: [{ type: "text", text: "prd.md 还不存在，请先写入第一版。" }], details: {} }
       }
